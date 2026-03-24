@@ -12,6 +12,36 @@ from obsidian_mcp.errors import VaultNotFoundError, NoteNotFoundError
 OBSIDIAN_CONFIG_PATH = Path.home() / ".config" / "obsidian" / "obsidian.json"
 
 
+def list_vaults() -> list[dict]:
+    """Return all vaults registered in obsidian.json as a list of dicts.
+
+    Each entry has: name, path, open (bool), ts (int).
+    Returns an empty list if obsidian.json is missing or has no vaults.
+    """
+    if not OBSIDIAN_CONFIG_PATH.exists():
+        return []
+
+    try:
+        config_data = json.loads(OBSIDIAN_CONFIG_PATH.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+
+    vaults = config_data.get("vaults", {})
+    result = []
+    for vault_info in vaults.values():
+        path_str = vault_info.get("path", "")
+        result.append({
+            "name": Path(path_str).name,
+            "path": path_str,
+            "open": vault_info.get("open", False),
+            "ts": vault_info.get("ts", 0),
+        })
+
+    # Sort by most recently used first
+    result.sort(key=lambda v: v["ts"], reverse=True)
+    return result
+
+
 def discover_vault_path() -> Path:
     """Discover the active Obsidian vault path.
 
