@@ -1,6 +1,6 @@
 # obsidian-mcp
 
-An MCP server that gives AI assistants direct filesystem access to an [Obsidian](https://obsidian.md) vault. Built with [FastMCP](https://github.com/jlowin/fastmcp).
+An MCP server that gives AI assistants direct filesystem access to an [Obsidian](https://obsidian.md) vault. Built in Rust using [rmcp](https://github.com/modelcontextprotocol/rust-sdk).
 
 ## Features
 
@@ -39,7 +39,7 @@ An MCP server that gives AI assistants direct filesystem access to an [Obsidian]
 ### Folders
 - **`folder_create`** — Create a folder
 - **`folder_rename`** — Rename or move a folder
-- **`folder_delete`** — Delete a folder (`force=True` required if non-empty)
+- **`folder_delete`** — Delete a folder (`force=true` required if non-empty)
 
 ### Git (background)
 - Automatically initialises a git repo in your vault on startup (if one doesn't exist)
@@ -47,17 +47,19 @@ An MCP server that gives AI assistants direct filesystem access to an [Obsidian]
 
 ## Installation
 
-Requires [uv](https://docs.astral.sh/uv/).
+Requires [Rust](https://rustup.rs/) (stable toolchain).
 
 ```bash
 git clone https://github.com/Mohd-Bilal/obsidian-mcp.git
-cd obsidian-mcp
-uv sync
+cd obsidian-mcp/rust
+cargo build --release
 ```
+
+The compiled binary is at `rust/target/release/obsidian-mcp`.
 
 ## Configuration
 
-The server discovers your vault automatically from `~/.config/obsidian/obsidian.json` (the currently open vault). You can override this with an environment variable.
+The server discovers your vault automatically from `~/.config/obsidian/obsidian.json` on Linux or `~/Library/Application Support/obsidian/obsidian.json` on macOS (whichever vault was most recently open). You can override this with an environment variable.
 
 | Environment Variable | Description | Default |
 |---|---|---|
@@ -73,8 +75,7 @@ Add to `~/.config/claude/claude_desktop_config.json` or `.mcp.json`:
 {
   "mcpServers": {
     "obsidian": {
-      "command": "uv",
-      "args": ["--directory", "/path/to/obsidian-mcp", "run", "obsidian-mcp"],
+      "command": "/path/to/obsidian-mcp/rust/target/release/obsidian-mcp",
       "env": {
         "GIT_AUTOCOMMIT_INTERVAL": "15m"
       }
@@ -86,11 +87,16 @@ Add to `~/.config/claude/claude_desktop_config.json` or `.mcp.json`:
 ## Development
 
 ```bash
-# Run tests
-uv run pytest
+cd rust
 
-# Run a specific test module
-uv run pytest -v tests/test_notes.py
+# Build
+cargo build
+
+# Run tests
+cargo test
+
+# Run the server directly (stdio transport)
+cargo run
 ```
 
 ## License

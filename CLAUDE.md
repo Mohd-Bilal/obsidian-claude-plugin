@@ -5,52 +5,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Install dependencies
-uv sync
+cd rust
+
+# Build
+cargo build
 
 # Run all tests
-uv run pytest
-
-# Run a single test module
-uv run pytest -v tests/test_notes.py
+cargo test
 
 # Run a single test
-uv run pytest -v tests/test_notes.py::test_create_note
+cargo test test_create_note
 
 # Run the server (stdio transport)
-uv run obsidian-mcp
+cargo run
 ```
 
 ## Architecture
 
-This is an MCP server built with [FastMCP](https://github.com/jlowin/fastmcp) that exposes Obsidian vault operations as tools over stdio.
+This is an MCP server built in Rust using [rmcp](https://github.com/modelcontextprotocol/rust-sdk) that exposes Obsidian vault operations as tools over stdio.
 
 ### Startup flow
 
-`server.py` → `lifespan()` → loads `Config` → calls `discover_vault_path()` → constructs `Vault` → optionally starts `auto_commit_loop` background task → yields `AppContext(vault, config)` into every tool's `ctx.request_context.lifespan_context`.
+`main.rs` → `load_config()` → `discover_vault_path()` → constructs `Vault` → spawns optional `auto_commit_loop` background task → starts `serve_server` on stdio transport.
 
 ### Tool registration pattern
 
-Each domain module (`notes.py`, `frontmatter.py`, `links.py`, etc.) exposes two layers:
-1. **Pure functions** (e.g. `create_note(vault, ...)`) — sync, no MCP dependency, directly tested.
-2. **`register_tools(mcp)`** — wraps the pure functions in `@mcp.tool()` async handlers that extract `vault`/`config` from context and convert domain errors to `ToolError`.
+Each domain module (`notes.rs`, `frontmatter.rs`, `links.rs`, etc.) exposes pure functions (e.g. `create_note(vault, ...)`). Tool handlers are defined in `main.rs` via the `#[tool]` macro on `ObsidianServer`, which holds shared state behind `Arc<Mutex<Vault>>`. Handlers call `with_vault` / `with_vault_mut` to access the vault and map `ObsidianError` to a `String` error.
 
-`server.py` imports each module and calls `register_tools(mcp)` at import time. The two vault-level tools (`vault_list`, `vault_switch`) are defined directly in `server.py`.
+### Vault discovery (`vault.rs`)
 
-### Vault discovery (`vault.py`)
-
-`OBSIDIAN_CONFIG_PATH` is resolved at import time via `_obsidian_config_path()`: `~/Library/Application Support/obsidian/obsidian.json` on macOS, `~/.config/obsidian/obsidian.json` on Linux. Discovery order: `OBSIDIAN_VAULT_PATH` env var → `obsidian.json` (open vault preferred, else highest `ts`).
+`OBSIDIAN_CONFIG_PATH` is resolved via `_obsidian_config_path()`: `~/Library/Application Support/obsidian/obsidian.json` on macOS, `~/.config/obsidian/obsidian.json` on Linux. Discovery order: `OBSIDIAN_VAULT_PATH` env var → `obsidian.json` (open vault preferred, else highest `ts`).
 
 ### Key files
 
 | File | Role |
 |------|------|
-| `src/obsidian_mcp/server.py` | FastMCP app, lifespan, vault_list/vault_switch tools |
-| `src/obsidian_mcp/vault.py` | `Vault` class, `discover_vault_path()`, `list_vaults()` |
-| `src/obsidian_mcp/config.py` | `load_config()` from env vars |
-| `src/obsidian_mcp/errors.py` | Domain exception hierarchy |
-| `tests/conftest.py` | `vault` and `vault_dir` fixtures; sets `OBSIDIAN_VAULT_PATH` env var |
+| `rust/src/main.rs` | `ObsidianServer`, all `#[tool]` handlers, entry point |
+| `rust/src/vault.rs` | `Vault` struct, `discover_vault_path()`, `list_vaults()` |
+| `rust/src/config.rs` | `load_config()` from env vars |
+| `rust/src/errors.rs` | `ObsidianError` enum |
+| `rust/src/git.rs` | `ensure_git_repo()`, `auto_commit_loop()` |
 
 ### Error handling convention
 
-Domain errors (`NoteNotFoundError`, `NoteAlreadyExistsError`, etc.) are raised from pure functions and caught in `register_tools` wrappers, which re-raise as `ToolError` for the MCP client.
+Domain errors are represented by `ObsidianError` variants, returned from pure functions. Tool handlers convert them to `String` via `.map_err(|e| e.to_string())`, which rmcp surfaces as an error response to the MCP client.
