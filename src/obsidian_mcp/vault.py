@@ -4,12 +4,20 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Iterator
 
 from obsidian_mcp.errors import VaultNotFoundError, NoteNotFoundError
 
-OBSIDIAN_CONFIG_PATH = Path.home() / ".config" / "obsidian" / "obsidian.json"
+
+def _obsidian_config_path() -> Path:
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "obsidian" / "obsidian.json"
+    return Path.home() / ".config" / "obsidian" / "obsidian.json"
+
+
+OBSIDIAN_CONFIG_PATH = _obsidian_config_path()
 
 
 def list_vaults() -> list[dict]:
