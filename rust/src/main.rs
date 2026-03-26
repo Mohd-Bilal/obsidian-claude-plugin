@@ -1,5 +1,6 @@
 mod config;
 mod errors;
+mod git;
 mod vault;
 mod notes;
 mod frontmatter;
@@ -430,13 +431,27 @@ async fn main() -> anyhow::Result<()> {
     } else {
         discover_vault_path()?
     };
-    let vault = Vault::new(vault_root);
 
+    // Ensure the vault is a git repo before starting (init if needed).
+    git::ensure_git_repo(&vault_root);
+
+    let vault = Vault::new(vault_root.clone());
     let server = ObsidianServer::new(vault, config.templates_folder);
+
+    // Spawn the auto-commit background task if configured.
+    let commit_task = config.git_autocommit_interval.map(|interval| {
+        tokio::spawn(git::auto_commit_loop(vault_root, interval))
+    });
 
     let transport = rmcp::transport::io::stdio();
     let running = serve_server(server, transport).await?;
     running.waiting().await?;
+
+    // Cancel the commit loop on clean shutdown.
+    if let Some(task) = commit_task {
+        task.abort();
+        let _ = task.await;
+    }
 
     Ok(())
 }

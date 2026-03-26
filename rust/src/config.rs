@@ -7,8 +7,6 @@ pub struct Config {
     /// Explicit vault path; None means use vault discovery.
     pub vault_path: Option<PathBuf>,
     /// Auto-commit interval in seconds; None means disabled.
-    /// Stored for future use; the Rust port does not currently run a background git loop.
-    #[allow(dead_code)]
     pub git_autocommit_interval: Option<u64>,
     /// Name of the templates folder inside the vault.
     pub templates_folder: String,
