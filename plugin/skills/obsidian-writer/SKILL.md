@@ -26,7 +26,7 @@ description: >
 - Create a new folder only if none fits.
 - Naming: `Topic/Subtopic/` hierarchy — never flat single-level folders.
 
-### Step 3 — Index Note (`{Topic} — Index.md`)
+### Step 3 — Index Note (`00 - {Topic} — Index.md`)
 
 Always create this first. Template:
 
@@ -49,6 +49,7 @@ Always create this first. Template:
 
 | Note | What it covers |
 |------|----------------|
+| [[Folder/00 - Topic — Index]] | This index |
 | [[Folder/01 - Subtopic A]] | Brief description |
 | [[Folder/02 - Subtopic B]] | Brief description |
 
@@ -82,7 +83,7 @@ Template:
 ```
 
 Rules:
-- Each note must link back to the index: `[[Folder/Topic — Index]]`
+- Each note must link back to the index: `[[Folder/00 - Topic — Index]]`
 - Cross-link between sibling deep-dives where they explicitly relate.
 - Use code blocks (with language tag) for all code.
 - Use tables for comparisons.
@@ -112,6 +113,6 @@ After all notes are written, apply the `obsidian-canvas` skill to build or updat
 | Comparisons | Markdown tables |
 | Key insights | `>` blockquote |
 | Word limit | 500 words max per note |
-| Index naming | `{Topic} — Index.md` — never bare `Index.md` |
+| Index naming | `00 - {Topic} — Index.md` — never bare `Index.md` |
 | Sources | Every note citing external info must have `## Sources` |
 | Claude knowledge | Note as: `> Source: Claude training knowledge as of {date}` |

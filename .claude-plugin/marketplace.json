@@ -1,0 +1,13 @@
+{
+  "name": "obsidian-mcp",
+  "owner": {
+    "name": "mohd-bilal"
+  },
+  "plugins": [
+    {
+      "name": "obsidian",
+      "source": "./plugin",
+      "description": "Write and manage Obsidian vault notes via the obsidian-mcp MCP server."
+    }
+  ]
+}

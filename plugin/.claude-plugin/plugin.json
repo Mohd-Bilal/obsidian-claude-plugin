@@ -1,12 +1,9 @@
 {
-  "name": "obsidian-mcp",
-  "version": "1.0.0",
+  "name": "obsidian",
+  "version": "1.3.0",
   "description": "Write and manage Obsidian vault notes via the obsidian-mcp MCP server.",
   "author": { "name": "mohd-bilal" },
   "repository": "https://github.com/Mohd-Bilal/obsidian-mcp",
   "license": "MIT",
-  "keywords": ["obsidian", "notes", "mcp", "knowledge-base", "canvas"],
-  "skills": "./skills/",
-  "agents": "./agents/",
-  "mcpServers": "./.mcp.json"
+  "keywords": ["obsidian", "notes", "mcp", "knowledge-base", "canvas"]
 }
