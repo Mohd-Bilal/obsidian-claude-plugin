@@ -1,4 +1,4 @@
-# obsidian-mcp
+# Obsidian Claude Code Plugin
 
 An MCP server that gives AI assistants direct filesystem access to an [Obsidian](https://obsidian.md) vault. Built in Rust using [rmcp](https://github.com/modelcontextprotocol/rust-sdk).
 
